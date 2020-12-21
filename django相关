@@ -1,0 +1,236 @@
+Django管理工具
+    安装号djngo之后，可以使用管理工具：django-admin.py
+    创建项目：django-admin startproject 项目名
+    目录介绍
+        HelloWorld: 项目的容器。
+        manage.py: 一个实用的命令行工具，可让你以各种方式与该 Django 项目进行交互。
+        HelloWorld/__init__.py: 一个空文件，告诉 Python 该目录是一个 Python 包。
+        HelloWorld/asgi.py: 一个 ASGI 兼容的 Web 服务器的入口，以便运行你的项目。
+        HelloWorld/settings.py: 该 Django 项目的设置/配置。
+        HelloWorld/urls.py: 该 Django 项目的 URL 声明; 一份由 Django 驱动的网站"目录"。
+        HelloWorld/wsgi.py: 一个 WSGI 兼容的 Web 服务器的入口，以便运行你的项目
+    启动项目：python manage.py runserver ip端口
+
+    视图和url配置
+        视图：
+            from django.http import HttpResponse
+
+            def hello(request):
+                return HttpResponse("Hello World!")
+
+        url配置：
+            from django.conf.urls import url
+            from django.urls import path
+
+            from . import views
+            urlpatterns = [
+                # url(r'^$', views.hello)
+                path("hello/", views.hello)
+            ]
+        path函数可以接受4个参数，path(route, view, kwarg=None, name=None)
+            route: 字符串，表示url规则，与之匹配的url会执行第二个参数view
+            view: 用于执行与url相对应的url请求
+            kwargs: 视图使用字典类型的参数
+            name: 用来反向获取url
+
+django模板
+    创建templates目录
+        变量使用{{ name }}  语法使用 {% if condition %}
+        在settings中设置templates变量中的 'DIRS': [os.path.join(BASE_DIR, 'templates')]
+        在views中return render(request, 'hello.html', context)  # 如果是locals(),则是将函数中的变量都返回给template模板中
+        列表和字典都可以使用点来取出对应的元素
+        过滤器： {{ 变量名 | 过滤器：可选参数 }}  可以进行套接，连续使用过滤
+            lower  变小写
+            truncatewords:'位数'  显示前多少个
+            default:'哈哈哈'  如果值为false，就显示哈哈哈
+            length: 长度
+            filesizeformat  人性化显示文件大小
+            date:'Y-m-d H:i:s'  年月日时分秒的日期显示
+            truncatechars：‘位数’  按照位数显示，多余的...结尾
+            safe  针对html标签不需要转义，让其生效
+        语法：
+            {% if condition %}
+                ...
+            {% elif condition1 %}
+                ...
+            {% else %}
+                ...
+            {% endif%}
+
+        for循环
+            {% for i in l reversed %}  # 加上reversed会使其反向迭代
+                ...
+            {% endfor %}
+
+        判断是否相等
+            {% ifequal a b %}
+                # 相等之后显示的代码
+            {% else %}
+                # 不相等显示的代码
+            {% endifequal %}
+
+        csrf_token: 作用是跨站请求伪造保护
+            在form表单中使用{csrf_token}
+
+        自定义标签和过滤器
+            1. 在应用目录下创建templatetags目录
+            2. 在目录下创建任意py文件
+            3. 在文件内书写两行代码
+                from django import template
+
+                register = template.Library()
+
+            4. 利用装饰器@register.filter自定义过滤器
+                注意：参数最多只能有两个
+                @register.filter
+                def my_filter(v1, v2):
+                    return v1+ v2
+
+            5. 利用装饰器@register.simple_tag自定义标签
+                @register.simple_tag
+                def my_tag(a,b,c):
+                    return a*b*c
+            6. 在使用自定义标签和过滤器之前，需要在文件的上方导入{% load 文件 %}
+
+            7. 在html中使用自定义过滤器
+                {{ l| my_filter:aa }}
+
+            8. 在html中使用自定义标签
+                {% my_tag 11 22 33 %}
+
+            9. 语义化标签
+                在该标签文件中导入mark_safe
+                from django.utils.safestring import mark_safe
+
+                @register.simple_tag
+                def my_html(v1, v2):
+                    temp_html = "<input type='text' id='%s' class='%s' />" %(v1, v2)
+                    return mark_safe(temp_html)
+                {% my_html 'aa' 'bb' %}
+
+            10. # TODO 内涵标签，需要拿到数据之后进行渲染的模板
+
+        配置静态文件
+            1. 在根目录下创建statics目录
+            2. 在settings文件下方添加一下配置
+
+                STATIC_URL = '/static/'  # 别名
+                STATICFILES_DIRS = [
+                    os.path.join(BASE_DIR, "statics"),
+                ]
+
+            3. 在statics目录下创建css目录，js目录，Images目录，plugins目录，
+            4. 把bookstrap框架放入插件目录下
+            5. 在HTML文件的head标签内引入bookstrap。
+                <link rel="stylesheet" href="/static/plugins/bootstrap-3.3.7-dist/css/bootstrap.css">
+            6. 在模板中使用{% load static %}, 引入静态资源
+                {% static 'images/aa.png' %}
+
+        模板继承
+            复用， 减少冗余
+            父模板用于防止可重复利用的内容，子模板继承父模板的内容，并放置自己的内容。
+            标签block ...endblock 是父模板预留的区域，
+                {% block name %}
+                    ... 特异化内容
+                {% endblock name %}
+            子模板使用extends继承
+                {% extends '父模板路径' %}
+
+django模型--orm
+    orm解析过程：
+        1. 将python代码转化为sql语句
+        2. sql语句通过pymysql传送到数据库服务端
+        3. 在数据库服务端执行得到返回结果
+    数据库配置
+        1. 在settings文件中配置
+            DATABASES = {
+                'default':
+                {
+                    'ENGINE': 'django.db.backends.mysql',    # 数据库引擎
+                    'NAME': 'runoob', # 数据库名称
+                    'HOST': '127.0.0.1', # 数据库地址，本机 ip 地址 127.0.0.1
+                    'PORT': 3306, # 端口
+                    'USER': 'root',  # 数据库用户名
+                    'PASSWORD': '123456', # 数据库密码
+                }
+            }
+        2. 在settings同一级别下的__init__.py配置,也可以直接在settings文件中配置
+            import pymysql
+            pymysql.install_as_MySQLdb()
+    定义模型
+        1. 创建app的命令：python manage.py startapp xxx
+        2. models文件中写模型类
+        3. 在settings中注册进INSTALLED_APP 中
+        4. 命令中运行
+            python manage.py migrate  # 创建表结构
+            # 一旦进行数据库的变动，必须执行数据库迁移命令
+            python manage.py makemigrations xxx  # 先进性预加载，并没有真正执行
+            python manage.py migrate xxx  # 真正执行
+
+        注释： 如果执行报错 database version，将报错信息中的base.py中注释两行代码
+            if version < (1, 3, 13):
+                raise ImproperlyConfigured('mysqlclient 1.3.13 or newer is required; you have %s.' % Database.__version__)
+            operations.py在报错的代码前加上
+                query = query.encode()
+
+        views中的操作方法
+            obj.save()  添加数据
+            l = models.User.objects.all()   查询所有的
+            r = models.User.objects.filter(id=1)  设置条件过滤结果
+            r = models.User.objects.get(id=1)  获取单个对象
+            models.User.order_by('id')  排序
+            save()或者update可以更改数据
+                a = models.User.objects.filter(id=1).update(name='xxx')
+            obj.delete()  删除数据
+
+表单
+    Request对象
+        path: 请求页面的全路径
+        method: 请求中使用的HTTP方法的字符串表示，全大写
+        GET： 包含所有HTTP GET参数的类字典对象
+        POST： 包含所有HTTP POST 参数的类字典对象
+        REQUEST： 是GET和POST属性的集合体
+        COOKIES： 包含所有COOKIE的标准python字典对象
+        FILES： 包含所有上传的类字典对象，每个key都是input 中的name的值,value是标准python类字典对象，有三个key
+            filename: 上传文件名，用python字符串表示
+            content-type: 上传文件的content-type
+            content: 上传文件的原始内容
+            只有在请求方式是POST，form表单中enctype='multipart/form-data'属性时FILES才有数据，否则是空字典
+        META：
+            CONTENT_LENGTH
+            CONTENT_TYPE
+            QUERY_STRING: 未解析的原始查询字符串
+            REMOTE_ADDR: 客户端IP地址
+            REMOTE_HOST: 客户端主机名
+            SERVER_NAME: 服务器主机名
+            SERVER_PORT: 服务器端口
+            META 中这些头加上前缀 HTTP_ 为 Key, 冒号(:)后面的为 Value， 例如:
+            HTTP_ACCEPT_ENCODING
+            HTTP_ACCEPT_LANGUAGE
+            HTTP_HOST: 客户发送的HTTP主机头信息
+            HTTP_REFERER: referring页
+            HTTP_USER_AGENT: 客户端的user-agent字符串
+            HTTP_X_BENDER: X-Bender头信息
+        user:是一个django.contrib.auth.models.User 对象。可以使用is_authenticate()判断是否登录
+        has_key()  检查request.GET or request.POST中是否包含参数指定的Key。
+        get_full_path()  返回包含查询字符串的请求路径。例如， "/music/bands/the_beatles/?print=true"
+
+视图层
+    一个视图函数是一个简单的python函数，接受web请求并且返回web响应，都会返回一个HTTPResponse对象。
+    视图层中有重要的两个对象request / HttpResponse
+    请求对象request 方法
+        GET：如果有多个，返回最后一个
+        POST：form表单中的name为key, value为值
+        body: 原生请求体的二进制字节流，只有POST请求有，处理图片，xml,json等
+        path: url的路径部分，字符串
+    响应对象：
+        HttpResponse("")  返回文本，参数为字符串，参数也可以写html标签
+        render(request, 'xx.html', {"name":name})  返回页面
+        redirect(“xxx.html”)  重定向，跳转到新的页面
+
+
+
+
+
+
+

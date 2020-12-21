@@ -1,0 +1,27 @@
+
+
+def insert_many(collection, store_item, last_one=False):
+    if len(store_item) > 1000 or last_one:
+        from collections import OrderedDict
+        temp_store_item = []
+        for el in store_item:
+            el = OrderedDict(sorted(el.items()))
+            temp_store_item.append(el)
+        store_item = temp_store_item
+        collection.insert_many(store_item)
+        return []
+    else:
+        return store_item
+
+
+
+def bulk_write(requests, collection, last_one=False):
+    if len(requests) > 10000 or last_one:
+        collection.bulk_write(requests)
+        return []
+    else:
+        return requests
+
+from pymongo.operations import UpdateOne
+requests = []
+requests.append(UpdateOne({'_id': id}, {'$set': add}))
