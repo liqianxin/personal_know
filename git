@@ -1,0 +1,88 @@
+git基本概念
+    仓库：项目存放，必须要创建一个repository
+    收藏：收藏该项目的人数
+    复制克隆项目（folk）：别人想在你的项目上做修改，可以fork，之后会生成一个基于你项目基础的项目，可以随便改，不影响原有的项目
+    发起请求(pull request): 别人fork的项目可以pull request 给项目的主人，然后审核通过之后，可以选择合并到原来仓库
+
+git命令总结
+    git add filename  : 文件在开发区，提交到暂存区
+    git commit -m '修改内容提示信息'  ：文件提交到版本控制区，此时会生成版本号
+    git log --graph  以流程图的方式展示
+    git log --graph --pretty=format:"%h %s"  格式化显示哈希值和提交信息
+
+
+    回滚：
+        未提交到暂存区之前：未add, =====》 执行完之后会将还未add的修改内容清空
+            git checkout -- filename
+        提交到暂存区之后：已经add  =======》 执行之后会将添加到暂存区的修改内容变为未add状态
+            git reset HEAD filepath  如果是全部的话，不用加文件路径
+        commit之后  :===》 这个commit_id为上次commit的id，
+            git reset --soft commit_id
+        回退到之前版本
+            git reset --hard commit_id
+
+分支
+    先创建一个分支， 然后开始进行开发等，分支转换的时候是需要上一个分支先进行commit，之后转换分支，此时原分支会保存
+    分支之间是不互相影响的，做环境的隔离
+    将bug分支的代码合并到master分支
+        1. 先到master分支
+        2. git merge bug
+    命令
+        git branch  输出所有分支，及标记所在分支
+        git branch new_branch  创建新分支, 基于当前所在的分支创建的分支
+        git branch -d branch_name  删除分支
+    合并冲突，手动解决冲突错误, IDE环境会智能地帮助选择
+
+git工作流
+    也就是流程开发的工作过程
+    一般刚开始是有两个分支：master和dev
+        master: 只保留正式版本
+        dev： 主要用作开发
+
+pull与push
+    git remote add origin 远程仓库名字   起别名
+    git push -u origin 分支   远程推送代码
+    第一次进行拉代码
+        git clone 远程仓库地址
+        git checkout 分支    切换分支
+    开发流程
+        git checkout dev
+        git merge master  (仅一次)
+        修改代码，提交代码
+
+        git checkout dev
+        git pull origin dev
+        继续开发
+
+    开发完毕，上线代码
+        1. 将dev分支合并到Master, 进行上线
+            git checkout master
+            git merge dev
+            git push origin master
+
+        2. 把dev分支推送到远程
+            git checkout dev
+            git merge master
+            git push origin dev
+
+rebase 变基
+    合并记录尽量不要合并已经push到仓库的记录
+    让提交记录变得简洁，从当前commit向之前的进行
+        git rebase -i commit_id    从当前版本到对应的commit_id进行合并
+        git rebase -i HEAD~n    从当前版本向前数n个版本进行合并
+    第二种：将分支记录合并到主分支记录，将v3合并到master
+    -----v1------v2---------v4-------v5
+          \------v3 -------/
+        1. 回到dev分支  git checkout dev
+        2. git rebase master  类似于合并，但是将主分支移到v3之后
+        3. git checkout master   切回到master
+        4. git merge dev  将dev合并
+    第三种：远程拉取不会产生分叉
+        git pull origin dev
+        替换为
+        git fetch origin dev
+        git rebase origin/dev
+
+标签
+    git tag -a version_name -m "信息"
+    git tag -d version_name

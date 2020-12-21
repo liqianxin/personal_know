@@ -1,0 +1,57 @@
+首页静态化
+
+虚拟环境的创建(windows)
+    1. pip install virtualenv  -i https://pypi.python.org/simple/
+    2. 配置系统环境变量：WORKON_HOME 路径自行选择
+    3. 创建虚拟环境
+        1. cd到具体位置
+        2. mkvirtualenv name 在当前目录下创建名为ENV的虚拟环境
+        3. 激活/退出虚拟环境
+            使用命令workon进行切换虚拟环境
+            lsvirtualenv 查看虚拟环境所在的目录
+            cd ~/env 跳转到虚拟环境的文件夹
+            pip list  查看当前虚拟环境的第三方库
+            deactivate 推出当前虚拟环境
+        4. 删除虚拟环境
+            直接删除对应的文件夹即可
+            rmvirtualenv name
+
+虚拟环境的创建(linux)
+    1. pip install virtualenv
+        pip install virtualenvwrapper
+        mkdir ~/.virtualenvs
+        vim ~/.bashrc  文件末尾添加
+            export WORKON_HOME = $HOME/.virtualenvs
+            source /usr/local/bin/virtualenvwrapper.sh
+        source ~/.bashrc
+    2. 创建
+        mkvirtualenv name  这个是根据系统环境变量创建的，py2
+        创建python3环境  mkvirtualenx --python=/usr/bin/python3 name
+    3. 删除
+        rmvirtualenv name
+    3. 进入
+        workon 虚拟环境名称
+    3. 退出
+        deactivate
+    3. 说明   所有的虚拟环境都在/home/.virtualenvs目录下
+
+
+drf返回的是json格式数据
+    1. 浏览器发送请求静态页面，（静态文件服务器）拿到静态页面
+    2. 静态页面上的js代码运行向django发起请求
+    3. django根据请求的api返回Json格式的数据
+    4. 前端拿到数据之后进行渲染  VUE是单页面开发
+
+写接口顺序：
+    1. 在models.py中写表模型
+    2. 新建一个序列化类： ser.py ,这个类返回的是json格式数据，序列化
+    3. 写视图函数
+    4. 写路由关系， urls中写
+    5. 数据库迁移
+
+drf的安装：
+    1. pip install djangorestframework
+    2. 在settings.py中注册：‘rest-framework’
+    3. 选择连接数据库：DATABASES
+
+
